@@ -1,0 +1,35 @@
+#
+# Example invocation:
+#    ansible-playbook cluster-create.yml -e "cluster_name=foo"
+#
+---
+
+- hosts: localhost
+  gather_facts: false
+
+  roles:
+    - role: admission_token
+      tags:
+        - token
+
+  tasks:
+    - debug:
+        var: admission_token
+      tags:
+        - token
+  
+- hosts: all-nodes
+  become: yes
+  become_method: sudo
+  roles:
+    - kubernetes-common
+
+
+
+#- hosts: kube-master
+#  roles:
+#    - kubernetes-master
+
+#- hosts: kube-nodes
+#  roles:
+#    - kubernetes-nodes
