@@ -12,15 +12,8 @@ nodes = [
   { :hostname => 'kubernetes-node3',  :ip => '192.168.30.13', :ram => 512 }
 ]
 
-ansibleuser = <<SCRIPT
-  ## add ansible
-  useradd -m -s /bin/bash -U ansible -u 666 --groups wheel
-  cp -r /home/vagrant/.ssh /home/ansible/
-  chown -R ansible:ansible /home/ansible
-  chmod 700 /home/ansible/.ssh/
-  chmod 600 /home/ansible/.ssh/authorized_keys
-  echo "%ansible ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/ansible
-SCRIPT
+#public_key_path = File.join(D:\Education, "Kubernetes", "pub_key")
+#public_key = IO.read(public_key_path)
 
 Vagrant.configure("2") do |config|
   nodes.each do |node|
@@ -30,7 +23,8 @@ Vagrant.configure("2") do |config|
       nodeconfig.vm.network :private_network, ip: node[:ip]
       memory = node[:ram] ? node[:ram] : 256;
       config.vm.provision "file", source: "D:/Education/Kubernetes/auth_key_vagrant", destination: "~/.ssh/authorized_keys"
-      config.vm.provision "shell", inline: "#{ansibleuser}", privileged: true
+      #config.ssh.private_key_path = "~/.ssh/id_rsa"
+      #config.ssh.forward_agent = true
       nodeconfig.vm.provider :virtualbox do |vb|
         vb.customize [
           "modifyvm", :id,
@@ -38,10 +32,7 @@ Vagrant.configure("2") do |config|
           "--cpus", "1"
         ]
       end
-#      config.vm.provision "ansible" do |ansible|
-#          ansible.verbose = "v"
-#          ansible.playbook = "./playbook.yml"
-#        end
+
   end
 
   end
