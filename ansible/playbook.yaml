@@ -1,0 +1,49 @@
+#
+# Example invocation:
+#    ansible-playbook cluster-create.yml -e "cluster_name=foo"
+#
+---
+#Create token for the Kubernates cluster
+- hosts: localhost
+  gather_facts: false
+
+  roles:
+    - role: admission_token
+      tags:
+        - token
+
+  tasks:
+    - debug:
+        var: admission_token
+      tags:
+        - token
+
+# Implements Step 1 of http://kubernetes.io/docs/getting-started-guides/kubeadm/
+# (1/4) Installing kubelet and kubeadm on your hosts
+- hosts: "{{ cluster_name }}"
+
+  become: true
+  become_method: sudo
+
+  roles:
+    - role: kubernetes-install
+      tags:
+        - repo
+        - master
+        - nodes
+
+#- hosts: all-nodes
+#  become: yes
+#  become_method: sudo
+#  roles:
+#    - kubernetes-common
+
+
+
+#- hosts: kube-master
+#  roles:
+#    - kubernetes-master
+
+#- hosts: kube-nodes
+#  roles:
+#    - kubernetes-nodes
