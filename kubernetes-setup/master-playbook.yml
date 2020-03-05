@@ -108,6 +108,7 @@
       wget https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml -O calico.yaml
       sed -i "s/192.168.0.0/'"172.16.0.0/16"'/g" calico.yaml
       kubectl apply -f calico.yaml
+
   - name: Generate join command
     command: kubeadm token create --print-join-command
     register: join_command
@@ -115,6 +116,30 @@
   - name: Copy join command to local file
     become: false
     local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+  - name: Deploy dashboard
+    become: false
+    shell: |
+      wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
+      kubectl apply -f recommended.yaml
+
+  - name: Copy the adin user creator to server location
+    copy: src=apps/dashboard-adminuser.yaml dest=/tmp/dashboard-adminuser.yaml mode=0777
+
+  - name: Create admin user for WebUI
+    become: false
+    shell: |
+      kubectl apply -f /tmp/dashboard-adminuser.yaml
+
+  - name: Generate the token ID
+    become: false
+    shell: |
+      kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '{print $1}')
+    register: tocken_output
+
+  - name: Save tocken to filename
+    become: false
+    local_action: copy content="{{ tocken_output }}" dest="./dashboard-tocken"
 
   handlers:
   - name: docker status
